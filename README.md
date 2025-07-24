@@ -25,7 +25,6 @@ exemple_resultats.mat: dades de sortida simulades.
 
 **->** docs/: documents de suport.
 A_simulator_with_realistic_and_challenging_scenarios_for_virtual_T1D_patients_undergoing_CSII_and_MDI_therapy.pdf: paper on es desenvolupa el simulador original al qual s'han aplicat els canvis.
-Memòria_TFG_Laia_Casademont.pdf: versió final de la memòria del TFG.
 
 ## Requeriments d'instal·lació 
 - **MATLAB R2024a** o superior  

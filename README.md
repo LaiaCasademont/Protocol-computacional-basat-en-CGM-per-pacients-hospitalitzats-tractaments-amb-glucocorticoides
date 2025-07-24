@@ -5,29 +5,33 @@ Aquest Treball de Fi de Grau proposa un protocol computacional per optimitzar el
 ## Estructura del repositori
 README.md: aquest fitxer, amb la descripció del projecte i instruccions d’ús.
 
-**->** code/: carpeta que conté els fitxers .m creats o modificats durant el projecte:
-_Aquest TFG s’ha desenvolupat a través de nombroses versions internes. En aquest repositori es publica únicament la versió final.
-El procés complet, les iteracions prèvies i l’evolució del protocol es troben detallats a la memòria del TFG._
-_Si considereu d’utilitat accedir a versions anteriors o a altres etapes del desenvolupament o resultats (com els AGP dels pacients control o pel protocol natiu del hospital), no dubteu a contactar-me per correu electrònic:
+README.md
+Aquest fitxer, amb la descripció general del projecte i instruccions d’ús.
+
+code/
+Carpeta que conté els fitxers .m creats o modificats durant el projecte.
+
+_Aquest TFG s’ha desenvolupat a través de nombroses versions internes. En aquest repositori es publica únicament la versió final. El procés complet, les iteracions prèvies i l’evolució del protocol es troben detallats a la memòria del TFG.
+Si considereu d’utilitat accedir a versions anteriors o a altres etapes del desenvolupament o resultats (com els AGP dels pacients control o del protocol natiu de l’hospital), no dubteu a contactar-me per correu electrònic:
 laiacasademontt@gmail.com_
 
-**-** main.m: codi principal d'execució de la simulació (on s'han implentat les modifiacions per simular la hiperglucèmia produïda pels glucocorticoides.
+main.m: codi principal d’execució de la simulació (on s’han implementat les modificacions per simular la hiperglucèmia produïda pels glucocorticoides).
+run_mycontroller.m: implementació del protocol terapèutic final desenvolupat.
+init_mycontroller.m: configuració inicial del controlador amb les variables de pacient.
 
-**-** run_mycontroller.m: implementació del protocol terapèutic final desenvolupat.
+functions/
+Carpeta que conté funcions utilitzades pel simulador.
+generate_glucose.m: funció per simular glucosa capil·lar a partir de valors CGM.
+ask_manual_glucose.m: funció per introduir valors de glucosa capil·lar manualment; si la discrepància amb el CGM és >25%, s'utilitza el valor introduït.
 
-**-** init_mycontroller.m: configuració inicial del controlador amb les variables inicialitzades.
+results/protocolfinal/
+Resultats rellevants generats per la simulació.
+exemple_resultats.mat: dades de sortida simulades amb el protocol CGM implementat.
 
-**->** functions/: carpeta que conté els fitxers .m creats o modificats durant el projecte:
-**-** generate_glucose.m: funció per simular glucosa capil·lar a partir del CGM.
+docs/
+Documents de suport i referències bibliogràfiques.
+A_simulator_with_realistic_and_challenging_scenarios_for_virtual_T1D_patients_undergoing_CSII_and_MDI_therapy.pdf: article científic on es basa el simulador original emprat (Ernesto Estremera).
 
-**-** ask_manual_glucose.m: funció per introduïr glucosa capil·lar, realitza comparativa, si diferència amb el CGM >25% fa servir la introduïda, sinó la del CGM.
-
-
-**->** results/protocolfinal: resultats rellevants generats per la simulació.
-exemple_resultats.mat: dades de sortida simulades.
-
-**->** docs/: documents de suport.
-A_simulator_with_realistic_and_challenging_scenarios_for_virtual_T1D_patients_undergoing_CSII_and_MDI_therapy.pdf: paper on es desenvolupa el simulador original al qual s'han aplicat els canvis.
 
 ## Requeriments d'instal·lació 
 - **MATLAB R2024a** o superior  

@@ -1,0 +1,59 @@
+(...) 
+        Gp                    = Gp + glucose_production_rate;
+        Glucose               = max(min((Gp + CGM_noise(sample+1)),hardware.CGM.sensor_max),hardware.CGM.sensor_min); % noisy CGM measurement 
+        if Glucose > 400
+            Glucose=400; 
+        end
+(...) 
+% Glucocorticoids Announcemente/Adminsitration
+        if(scenario.glucocorticoids.enable)
+            Glucocorticoids_administration = find(time == scenario.glucocorticoids.intake_time_vector); %This means that in this time instant the glucocorticoids are delivered, and will affect blood glucose and now the controller knows about that!
+        else
+            Glucocorticoids_administration=0;
+            disp('No s.administra');
+        end
+
+       if scenario.glucocorticoids.enable
+
+            hour        = mod(floor(time/60), 24);
+            intake_time = scenario.glucocorticoids.intake_time;  % 9:00h
+
+            % Definim finestra i pic
+            start_effect = intake_time + 4;   % 13:00
+            peak_effect  = intake_time + 8;   % 17:00
+            end_effect   = intake_time + 14;  % 23:00
+
+            if hour >= start_effect && hour <= end_effect
+                dose = scenario.glucocorticoids.dose;  % en mg
+
+                % Efecte mínim més agressiu
+                min_x = max(1 - 0.03 * dose, 0.05);
+
+                % Factor d’efecte sobre insulin
+                % (manté paràbola inversa per a x_factor)
+                relative_time      = (hour - start_effect) / (end_effect - start_effect);
+                distance_from_peak = 4 * (relative_time - 0.5).^2;
+                x_factor           = min_x + (1 - min_x) * distance_from_peak;
+
+                % Ara la producció de glucosa amb forma triangular:
+                % creix linealment de start→peak i disminueix de peak→end
+                if hour <= peak_effect
+                    frac = (hour - start_effect) / (peak_effect - start_effect);
+                else
+                    frac = (end_effect - hour) / (end_effect - peak_effect);
+                end
+                frac = max(min(frac,1),0);  % dins [0,1]
+
+                % Amplitud del peak augmentada
+                peak_extra_glucose      = 6 * dose;  
+                glucose_production_rate = peak_extra_glucose * frac;
+
+            else
+                x_factor = 1.0;
+                glucose_production_rate = 0;
+            end
+
+        else
+            x_factor = 1.0;
+            glucose_production_rate = 0;
+        end

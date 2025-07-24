@@ -1,0 +1,383 @@
+function [controller, insulin, meal_bolus, rescueCHO, corrector_bolus, Tmaxrescue,insulin_glucocorticoids, glucose_used] = run_mycontroller(t, Glucose, glucose_used, Meal_announcement, Exercise_announcement, controller, Tmaxrescue,Glucocorticoids_administration)
+day = floor(t/(24*60));
+pes_kg = controller.specific.BW;
+
+
+%% INICIALITZACIONS
+
+rescueCHO = 0;
+corrector_bolus = 0;
+insulin_glucocorticoids = 0 ;
+day_min_current = t - day*24*60;
+
+controller.specific.stepCounter = controller.specific.stepCounter + 1;
+
+  %% EMPLENAMENT I BUIDATGE DELS VECTORS AMB DADES DE GLUCOSA 
+
+    controller.specific.dadesGlucosa24h(end+1) = Glucose;
+    max_buffer_size = 36;
+    controller.specific.glucose_buffer(end+1) = Glucose;
+    
+    if numel(controller.specific.glucose_buffer) > max_buffer_size
+        controller.specific.glucose_buffer(1) = [];  % elimina el més antic
+    end
+
+    if day >= 1  % només a partir del segon dia
+        if day_min_current < 9*60
+        controller.specific.glucosa_matinada(end+1) = Glucose;
+        end
+    end
+
+    if day_min_current >= 9*60 && day_min_current < 13*60
+        controller.specific.glucosa_postesmorzar(end+1) = Glucose;
+    elseif day_min_current >= 13*60 && day_min_current < 19*60
+        controller.specific.glucosa_postdinar(end+1) = Glucose;
+    elseif day_min_current >= 19*60
+        controller.specific.glucosa_postsopar(end+1) = Glucose; 
+    end
+
+   %% ALARMA DE HIPOS 
+    
+    temps_prediccio = 30;  
+    llindar_alarma = 70;   
+    
+    buffer = controller.specific.glucose_buffer;
+
+    if numel(buffer) >= 4
+        glucosa_buffer_suavitzada = movmean(buffer, 7);   
+        glucoses = glucosa_buffer_suavitzada(end-3:end);
+        minuts = (0:3) * 5;
+    
+        p = polyfit(minuts, glucoses, 1);
+        pendent = p(1);
+        glucosa_actual = glucoses(end);
+        glucosa_predita = glucosa_actual + pendent * temps_prediccio;
+        pendent_minim = -0.7;
+   
+    
+        if glucosa_predita <= llindar_alarma &&  ...
+        pendent < pendent_minim && ...
+        glucosa_actual < 95 && ...
+        (t - controller.specific.rescueCHO.time_of_last_rescue >= controller.specific.rescueCHO.time_between_rescues)
+            disp('ALERTA: risc d''hipo proper!');
+            disp(['Glucosa actual: ', num2str(glucosa_actual)]);
+            disp(['Pendent: ', num2str(pendent, '%.2f')]);
+            disp(['Glucosa predita (', num2str(temps_prediccio), ' min): ', num2str(glucosa_predita)]);
+
+            rescueCHO = controller.specific.rescueCHO.rescuecarbs_dose;
+            controller.specific.rescueCHO.time_of_last_rescue = t;
+            controller.specific.hipo_alarm_recent = true;
+            controller.specific.hipo_alarm_time = t;
+        end
+        
+    end
+
+    if isfield(controller.specific, 'hipo_alarm_recent') && ...
+       controller.specific.hipo_alarm_recent && ...
+       isfield(controller.specific, 'hipo_alarm_time') && ...
+       ~isnan(controller.specific.hipo_alarm_time)
+    
+        if (t - controller.specific.hipo_alarm_time) > 60
+            controller.specific.hipo_alarm_recent = false;
+        end
+    end
+
+    % INTERVENCIÓ D’EMERGÈNCIA: Hipo real detectada
+    if controller.specific.rescueCHO.enabled
+        if (Glucose < controller.specific.rescueCHO.hypo_threshold_for_rescues) && ...
+           (t - controller.specific.rescueCHO.time_of_last_rescue >= controller.specific.rescueCHO.time_between_rescues)
+            disp('Última comprovació amb mètode POC');
+            if glucose_used <= 70 
+                disp('PACIENT EN HIPO REAL. Administració de RESCUE_CHO!! Pacient en hipo (<70 mg/dL).');
+                rescueCHO = controller.specific.rescueCHO.rescuecarbs_dose;  % Ex: 15g
+                controller.specific.rescueCHO.time_of_last_rescue = t;
+            end
+        end
+    end
+
+    %% RESCUE ENFERMERIA 
+        
+        % b) CONTROL POST-SOPAR (21–22 h)
+        if (day_min_current >= 21*60 && day_min_current <= 22*60) && ...
+               (t - controller.specific.time_of_last_postsopar >= controller.specific.time_btw_postsopar)
+    
+            if (glucose_used < controller.specific.rescueCHO.hypo_threshold_for_rescues) && ...
+               (t - controller.specific.rescueCHO.time_of_last_rescue >= controller.specific.rescueCHO.time_between_rescues)
+                rescueCHO = controller.specific.rescueCHO.rescuecarbs_dose;
+                controller.specific.rescueCHO.time_of_last_rescue = t;
+                disp(['RESCUECHO en bloc post-sopar: glucose a ' num2str(glucose_used)]);
+            end
+           
+            controller.specific.time_of_last_postsopar = t;
+    
+        end
+
+    %% INSULIN BOLUS
+
+    if (Meal_announcement.gramsCHO > 0)
+        mitjana=NaN; 
+        rescat=0; 
+        %matí 9H
+        if day_min_current < 12*60
+            [adjustments, mitjana]  = update_bolus_adjustment('esmorzar');
+            controller.specific.bolus_adjustment_esmorzar = adjustments.bolus_adjustment_esmorzar;
+            controller.specific.glucosa_postesmorzarBasal = controller.specific.glucosa_postesmorzar;
+            controller.specific.glucosa_postesmorzar = [];
+    
+        %mig-dia 13h-19h
+        elseif day_min_current < 17*60
+            [adjustments, mitjana]  = update_bolus_adjustment('dinar');
+            controller.specific.bolus_adjustment_dinar    = adjustments.bolus_adjustment_dinar;
+            controller.specific.glucosa_postdinar = [];
+            
+        %nit >19h
+        else
+            [adjustments, mitjana]  = update_bolus_adjustment('sopar');
+            controller.specific.bolus_adjustment_sopar    = adjustments.bolus_adjustment_sopar;
+
+            controller.specific.glucosa_postsoparBasal = controller.specific.glucosa_postsopar;
+            controller.specific.glucosa_matinadaBasal= controller.specific.glucosa_matinada; 
+            controller.specific.glucosa_postsopar = []; 
+            controller.specific.glucosa_matinada = [];
+        end
+
+        if (glucose_used < controller.specific.rescueCHO.hypo_threshold_for_rescues) && ...
+               (t - controller.specific.rescueCHO.time_of_last_rescue >= controller.specific.rescueCHO.time_between_rescues)
+                    rescat=-1; 
+        end
+
+        if isfield(controller.specific, 'hipo_alarm_recent') && controller.specific.hipo_alarm_recent
+            disp('Bolus reduït per alarma d''hipo recent (<30min)');
+            rescat = rescat - 1;  % o el que vulguis: pots ajustar més o fer servir una percentatge
+        end
+    
+        if mitjana < 80
+                disp(['Glucosa <80 mg/dL → Reduim el bolus un 50%. Valor: ', num2str(glucose_used)]);
+
+                meal_bolus = (calcul_bolus_DTI(pes_kg, day_min_current)*0.5)+rescat;
+        else 
+                meal_bolus = calcul_bolus_DTI(pes_kg, day_min_current)+rescat;
+
+        end
+        disp(['La dosi de bolus recomanada és: ', num2str(meal_bolus), ' U i la hora del dia ', num2str(day_min_current)]);    
+    else
+                meal_bolus = 0;
+    end
+
+
+    %% BASAL (OUTPUTS)
+
+    if controller.MDI.enabled 
+            if (t == (controller.specific.time_injection * 60 + day * 24 * 60) && t ~= 0)   
+                controller = update_basal_adjustment_controller(controller)  ;  
+                insulin.MDI = controller.specific.current_slow_insulin_dose;
+                disp(['La dosi de basal recomanada és: ', num2str(insulin.MDI/1000), ' U']);
+            else
+                insulin.MDI = 0;
+            end
+            insulin.pump = 0;  % mU
+    end
+
+    %% IOB UPDATE
+
+      (...) 
+    %% HISTORY
+
+      (...) 
+    %% DTI (CÀLCUL BOLUS)
+
+    function dosi = calcul_bolus_DTI(pes_kg, day_min_current)
+    glucocorticoids_dosi= 40; %!!!!!!!!!!!!!!!!!!!!!CHAPUZA HO HAURIA D'HAVER VINCULAT AMB SCENARIO 
+    aux= glucocorticoids_dosi*pes_kg; 
+            if aux>=40
+                DTI=0.4*pes_kg;
+            elseif aux>=30 
+                DTI=0.3*pes_kg;
+            elseif aux>=20
+                DTI=0.2*pes_kg;
+            elseif aux>=10
+                DTI=0.1*pes_kg;
+            else 
+                DTI=0; 
+            end 
+    
+            DTI=DTI*70/100; %fem el 70% del DTI perquè el protocol ho diu així
+
+            if day_min_current < 12*60
+                dosi = DTI * 0.2 + controller.specific.adjustmentE;
+            elseif day_min_current < 17*60
+                dosi = DTI * 0.4 + controller.specific.adjustmentD;
+            else
+                dosi = DTI * 0.4 + controller.specific.adjustmentS;
+            end
+            disp(['La part proporcional que es recomana administrar en bolus és: ', num2str(dosi), ' U']);
+
+        return
+    end
+
+    %% BASAL (AJUST)
+
+    function controller = update_basal_adjustment_controller(controller)
+    
+        SCALE = 1000;
+        ts = controller.specific.ts;
+        current_basal = controller.specific.current_slow_insulin_dose / SCALE;
+    
+        % Calcular el dia actual
+        t_actual = controller.specific.stepCounter * ts;
+        day = floor(t_actual / (24*60));
+    
+        if day < 1
+            disp("Encara no tenim prou dades per ajustar la basal.");
+            return;
+        end
+    
+        % Recollir dades nocturnes
+        dades_basal = [controller.specific.glucosa_postsoparBasal, ...
+                       controller.specific.glucosa_matinadaBasal, ...
+                       controller.specific.glucosa_postesmorzarBasal];
+        dades_basal_netejades = dades_basal(120:end);  % Elimina 19h–21h
+    
+        if isempty(dades_basal_netejades)
+            disp("Alguna cosa ha fallat — no hi ha dades després de neteja.");
+            return;
+        end
+    
+        mitjana_basal = mean(dades_basal_netejades);
+        std_basal = std(dades_basal_netejades);
+    
+        disp(['Mitjana per basal (23–13h): ', num2str(mitjana_basal, '%.1f')]);
+        disp(['Desviació estàndard: ', num2str(std_basal, '%.1f')]);
+    
+        % === DECISIÓ ===       
+        if std_basal > 40
+            disp("Variabilitat nocturna massa alta — no s’ajusta la basal.");
+            return;
+    
+        elseif mitjana_basal > 200
+            nova_basal = min(current_basal + 2, 20);
+            motiu = 'Mitjana >200 → +2 U a la basal';
+    
+        elseif mitjana_basal < 90
+            nova_basal = max(current_basal - 2, 2);
+            motiu = 'Mitjana <90 → -2 U a la basal';
+    
+        elseif mitjana_basal < 100
+            nova_basal = max(current_basal - 1, 2);
+            motiu = 'Mitjana <100 → -1 U a la basal';
+    
+        else
+            nova_basal = current_basal;
+            motiu = 'Basal mantinguda (100 < mitjana ≤ 200)';
+        end
+    
+        % === APLICAR AJUST ===
+        nova_basal_mU = round(nova_basal * SCALE);
+        controller.specific.current_slow_insulin_dose = nova_basal_mU;
+    
+        disp([motiu, ' → nova basal: ', num2str(nova_basal, '%.2f'), ' U']);
+    
+        % Neteja de dades
+        controller.specific.glucosa_postsoparBasal = [];
+        controller.specific.glucosa_matinadaBasal = [];
+        controller.specific.glucosa_postesmorzarBasal = [];
+    
+    end
+
+
+    %% BOLUS (AJUST) 
+
+    function [adjustments, mitjana] = update_bolus_adjustment(moment_glucemia)
+        mitjana=NaN; 
+
+
+        switch moment_glucemia
+            case 'esmorzar'
+                dades = controller.specific.glucosa_postesmorzar;
+                percent_hipo = sum(dades < 70) / 48 * 100;
+
+                disp(['📉 % de valors en hipo: ', num2str(percent_hipo*100, '%.1f'), '%']);
+
+
+                 if numel(dades) >= 18
+                    mitjana = mean(dades);
+                    disp(['Mitjana glucosa 9–13h d’ahir: ', num2str(mitjana, '%.1f'), ' mg/dL']);
+                    if mitjana > 200    
+                        controller.specific.adjustmentE = controller.specific.adjustmentE + 2;
+                        disp('Mitjana >200 → +2 U al bolus d.esmorzar');
+                    elseif mitjana > 180
+                        controller.specific.adjustmentE = controller.specific.adjustmentE + 1;
+                        disp('Mitjana >180 → +1 U al bolus d.esmorzar');
+                    elseif mitjana < 100
+                        controller.specific.adjustmentE = controller.specific.adjustmentE - 1;
+                        disp('Mitjana <100 → -1 U al bolus d.esmorzar');
+                    elseif mitjana < 90 || percent_hipo >= 6.25 
+                        controller.specific.adjustmentE = controller.specific.adjustmentE - 2;
+                        disp('Mitjana <100 → -2 U al bolus d.esmorzar');
+                    end
+                else
+                    disp('Poques dades post-esmorzar del dia anterior — no s’ajusta bolus');
+                end
+    
+            case 'dinar'
+                dades = controller.specific.glucosa_postdinar;
+                if numel(dades) >= 18
+                    mitjana = mean(dades);
+                    disp(['Mitjana glucosa 13–19h d’ahir: ', num2str(mitjana, '%.1f'), ' mg/dL']);
+                    if mitjana > 300
+                        controller.specific.adjustmentD = controller.specific.adjustmentD + 5;
+                        disp('Mitjana >300 → +5 U al bolus de dinar');
+                    elseif mitjana > 250
+                        controller.specific.adjustmentD = controller.specific.adjustmentD + 4;
+                        disp('Mitjana >250 → +4 U al bolus de dinar');
+                    elseif mitjana > 200
+                        controller.specific.adjustmentD = controller.specific.adjustmentD + 2;
+                        disp('Mitjana >200 → +2 U al bolus de dinar');
+                    elseif mitjana > 180
+                        controller.specific.adjustmentD = controller.specific.adjustmentD + 1;
+                        disp('Mitjana >180 → +1 U al bolus de dinar');
+                    elseif mitjana < 100
+                        controller.specific.adjustmentD = controller.specific.adjustmentD - 1;
+                        disp('Mitjana <100 → -1 U al bolus de dinar');
+                    end
+                else
+                    disp('Poques dades post-dinar del dia anterior — no s’ajusta bolus');
+                end
+    
+            case 'sopar'
+                dades = controller.specific.glucosa_postsopar;
+                dades2= controller.specific.glucosa_matinada; 
+            
+                glucoses = [dades, dades2];  
+                if numel(glucoses) >= 18
+                    mitjana = mean(glucoses);
+                    disp(['Mitjana glucosa 19–9h d’ahir: ', num2str(mitjana, '%.1f'), ' mg/dL']);
+                   if mitjana > 300
+                        controller.specific.adjustmentS = controller.specific.adjustmentS + 5;
+                        disp('Mitjana >300 → +4 U al bolus de sopar');
+                   elseif mitjana > 250
+                        controller.specific.adjustmentS = controller.specific.adjustmentS + 4;
+                        disp('Mitjana >250 → +4 U al bolus de sopar');
+                   elseif mitjana > 200
+                        controller.specific.adjustmentS = controller.specific.adjustmentS + 2;
+                        disp('Mitjana >200 → +2 U al bolus de sopar');
+                   elseif mitjana > 180
+                        controller.specific.adjustmentS = controller.specific.adjustmentS + 1;
+                        disp('Mitjana >180 → +1 U al bolus de sopar');
+                   elseif mitjana < 100
+                        controller.specific.adjustmentS = controller.specific.adjustmentS - 1;
+                        disp('Mitjana <100 → -1 U al bolus de sopar ');
+                   end
+                else
+                    disp('Poques dades post-sopar del dia anterior — no s’ajusta bolus');
+                end
+            end
+            % Retornar ajustos
+            adjustments.bolus_adjustment_esmorzar = controller.specific.adjustmentE;
+            adjustments.bolus_adjustment_dinar    = controller.specific.adjustmentD;
+            adjustments.bolus_adjustment_sopar    = controller.specific.adjustmentS;
+
+    end
+
+return 
+end

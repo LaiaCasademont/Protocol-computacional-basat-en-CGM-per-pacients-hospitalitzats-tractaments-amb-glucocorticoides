@@ -22,6 +22,7 @@ laiacasademontt@gmail.com_
 
 **-** ask_manual_glucose.m: funció per introduïr glucosa capil·lar, realitza comparativa, si diferència amb el CGM >25% fa servir la introduïda, sinó la del CGM.
 
+**->** cohort/: carpeta que conté el .m amb la cohort dels 5 VT emprats per la realització de les simulacions:
 
 **->** results/protocolfinal: resultats rellevants generats per la simulació.
 exemple_resultats.mat: dades de sortida simulades.
@@ -45,5 +46,5 @@ Laia Casademont //
 Grau en Enginyeria Biomèdica //
 Universitat de Girona //
 Curs 2024–2025 //
-Tutor: Dr. Josep Vehí Caselles //
+Tutor: Dr. Josep Vehí Casellas //
 Projecte dins del marc: Càtedra UdG–Dexcom / Projecte MANGLAI (Estudi preclínic) 

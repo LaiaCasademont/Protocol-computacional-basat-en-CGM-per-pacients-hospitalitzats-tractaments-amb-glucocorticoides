@@ -37,3 +37,18 @@ Memòria_TFG_Laia_Casademont.pdf: versió final de la memòria del TFG.
 
 **El simulador base emprat en aquest projecte és propietat de la Càtedra UdG–Dexcom. fou desenvolupat en el marc de la Tesi Doctoral de l'Ernesto Estremera, investigador de la Càtedra i professor de la UdG. No s’inclou en aquest repositori per motius de drets d’autor.
 Per accedir al simulador original, cal sol·licitar permís directament a través de la Càtedra UdG–Dexcom**
+
+
+## Autoria 
+Laia Casademont
+
+Grau en Enginyeria Biomèdica
+
+Universitat de Girona
+
+Curs 2024–2025
+
+
+Tutor: Dr. Josep Vehí Caselles
+
+Projecte dins del marc: Càtedra UdG–Dexcom / Projecte MANGLAI (Estudi preclínic) 

@@ -19,6 +19,7 @@ laiacasademontt@gmail.com_
 **-** init_mycontroller.m: configuració inicial del controlador amb les variables inicialitzades.
 
 **->** functions/: carpeta que conté els fitxers .m creats o modificats durant el projecte:
+
 **-** generate_glucose.m: funció per simular glucosa capil·lar a partir del CGM.
 
 **-** ask_manual_glucose.m: funció per introduïr glucosa capil·lar, realitza comparativa, si diferència amb el CGM >25% fa servir la introduïda, sinó la del CGM.

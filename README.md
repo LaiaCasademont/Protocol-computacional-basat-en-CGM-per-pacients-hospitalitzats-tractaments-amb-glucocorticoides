@@ -6,6 +6,7 @@ Aquest Treball de Fi de Grau proposa un protocol computacional per optimitzar el
 README.md: aquest fitxer, amb la descripció del projecte i instruccions d’ús.
 
 code/: carpeta que conté els fitxers .m creats o modificats durant el projecte:
+
 _Aquest TFG s’ha desenvolupat a través de nombroses versions internes. En aquest repositori es publica únicament la versió final.
 El procés complet, les iteracions prèvies i l’evolució del protocol es troben detallats a la memòria del TFG._
 _Si considereu d’utilitat accedir a versions anteriors o a altres etapes del desenvolupament, no dubteu a contactar-me per correu electrònic:
@@ -30,5 +31,6 @@ Memòria_TFG_Laia_Casademont.pdf: versió final de la memòria del TFG.
   - Statistics and Machine Learning
     
 **AVÍS DE PROPIETAT INTEL·LECTUAL! 
+
 El simulador base emprat en aquest projecte és propietat de la Càtedra UdG–Dexcom. fou desenvolupat en el marc de la Tesi Doctoral de l'Ernesto Estremera, investigador de la Càtedra i professor de la UdG. No s’inclou en aquest repositori per motius de drets d’autor.
 Per accedir al simulador original, cal sol·licitar permís directament a través de la Càtedra UdG–Dexcom**

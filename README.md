@@ -1,8 +1,6 @@
 # Protocol-computacional-basat-en-CGM-per-pacients-hospitalitzats-tractaments-amb-glucocorticoides
 Aquest Treball de Fi de Grau proposa un protocol computacional per optimitzar el control glucèmic en pacients hospitalitzats no crítics tractats amb glucocorticoides, mitjançant el monitoratge continu de glucosa (CGM). A partir d’un simulador basat en el model de Hovorka, desenvolupat per investigadors de la Càtedra UdG–Dexcom, s’han aplicat modificacions específiques per estudiar l’efecte dels glucocorticoides i validar un algoritme terapèutic amb alarmes predictives.
 
-
-## Estructura del repositori
 ## Estructura del repositori
 README.md: aquest fitxer, amb la descripció del projecte i instruccions d’ús.
 
@@ -43,9 +41,9 @@ Per accedir al simulador original, cal sol·licitar permís directament a travé
 
 
 ## Autoria 
-Laia Casademont
-Grau en Enginyeria Biomèdica
-Universitat de Girona
-Curs 2024–2025
-Tutor: Dr. Josep Vehí Caselles
+Laia Casademont //
+Grau en Enginyeria Biomèdica //
+Universitat de Girona //
+Curs 2024–2025 //
+Tutor: Dr. Josep Vehí Caselles //
 Projecte dins del marc: Càtedra UdG–Dexcom / Projecte MANGLAI (Estudi preclínic) 

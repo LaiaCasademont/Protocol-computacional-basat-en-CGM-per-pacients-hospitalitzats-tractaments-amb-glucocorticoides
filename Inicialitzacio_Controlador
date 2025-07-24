@@ -1,0 +1,94 @@
+  %% controller = init_mycontroller(simulator, scenario)
+% 
+% 
+% 
+% 
+% 
+%
+%
+function controller = init_mycontroller(simulator, scenario, cohort, controller, subject, patient)
+% General parameters
+controller.name                   = 'LAIA';
+  (...)
+controller.MDI.enabled            = simulator.MDI_enabled;     % If false, insulin pump (CSII) is executed
+
+%% Specific parameters
+  (...)
+
+% OL Therapy
+  (...)
+
+% Insulin on board
+  (...)
+
+% Bolus Configuration
+controller.specific.target = 160; % [mg/dl]
+
+% Rescue Carbohydrates
+controller.specific.rescueCHO                            = struct();
+controller.specific.rescueCHO.enabled                    = true;
+controller.specific.rescueCHO.hypo_threshold_for_rescues = 70; % [mg/dl]
+controller.specific.rescueCHO.time_of_last_rescue        = 999;  % [min]
+controller.specific.rescueCHO.time_between_rescues       = 60; % [min]
+controller.specific.rescueCHO.rescuecarbs_dose           = 15; % [g]
+controller.specific.glucose_buffer = NaN(1, 6);  % Guarda últims 30 minuts de dades (6 mostres de 5 min)
+controller.specific.time_buffer    = NaN(1, 6);
+controller.specific.hipo_alarm_recent = false; 
+controller.specific.hipo_alarm_time = NaN;
+
+% MDI Configuration
+controller.MDI.insulin_type = 'none';
+if (controller.MDI.enabled)
+    controller.MDI.glargine_100              = true;
+    controller.MDI.glargine_300              = false; 
+    controller.MDI.degludec                  = false; 
+    controller.specific.time_injection       = 23;    %[h] 
+    if (controller.MDI.glargine_100)
+        controller.MDI.insulin_type           = 'Glargine100';
+        if controller.specific.time_injection   == 23    %[h]
+            controller.specific.slow_insulin_dose = cohort(subject).Bolus_Gla100_20H;  %[mU]
+            controller.specific.CR                = cohort(subject).CR_MDI_Gla100_20H; %(g/U)
+        else
+              (...)
+        end 
+    end
+end
+
+%DSS
+%VARIABLES NECESSARIES
+controller.specific.time_btw_postsopar =120; %[min]
+controller.specific.time_of_last_postsopar=0; 
+
+%BASAL
+controller.specific.dadesGlucosa24h     = [];
+controller.specific.stepCounter         = 0; 
+controller.specific.lastDayMean         = NaN; 
+controller.specific.lastNightMean       = NaN; 
+controller.specific.current_slow_insulin_dose=controller.specific.slow_insulin_dose;
+
+%BOLUS
+controller.specific.dadesGlucosaNit     = [];
+
+%AJUSTOS 
+controller.specific.adjustmentE =0; 
+controller.specific.adjustmentD =0; 
+controller.specific.adjustmentS =0; 
+
+controller.specific.glucosa_postsopar = [];
+controller.specific.glucosa_matinada = [];
+controller.specific.glucosa_postesmorzar = [];
+controller.specific.glucosa_postdinar = [];
+
+controller.specific.glucosa_postsoparBasal = [];
+controller.specific.glucosa_matinadaBasal = [];
+controller.specific.glucosa_postesmorzarBasal = [];
+
+controller.specific.adjustments = struct( ...
+    'bolus_adjustment_esmorzar', 0, ...
+    'bolus_adjustment_dinar'   , 0, ...
+    'bolus_adjustment_sopar'   , 0);
+
+% History Variables
+  (...)
+
+return

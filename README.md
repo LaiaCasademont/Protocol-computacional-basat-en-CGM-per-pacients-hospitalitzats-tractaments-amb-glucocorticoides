@@ -30,7 +30,7 @@ Memòria_TFG_Laia_Casademont.pdf: versió final de la memòria del TFG.
   - Signal Processing
   - Statistics and Machine Learning
     
-**AVÍS DE PROPIETAT INTEL·LECTUAL! 
+**AVÍS DE PROPIETAT INTEL·LECTUAL!**
 
-El simulador base emprat en aquest projecte és propietat de la Càtedra UdG–Dexcom. fou desenvolupat en el marc de la Tesi Doctoral de l'Ernesto Estremera, investigador de la Càtedra i professor de la UdG. No s’inclou en aquest repositori per motius de drets d’autor.
+**El simulador base emprat en aquest projecte és propietat de la Càtedra UdG–Dexcom. fou desenvolupat en el marc de la Tesi Doctoral de l'Ernesto Estremera, investigador de la Càtedra i professor de la UdG. No s’inclou en aquest repositori per motius de drets d’autor.
 Per accedir al simulador original, cal sol·licitar permís directament a través de la Càtedra UdG–Dexcom**

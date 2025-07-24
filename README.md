@@ -41,14 +41,8 @@ Per accedir al simulador original, cal sol·licitar permís directament a travé
 
 ## Autoria 
 Laia Casademont
-
 Grau en Enginyeria Biomèdica
-
 Universitat de Girona
-
 Curs 2024–2025
-
-
 Tutor: Dr. Josep Vehí Caselles
-
 Projecte dins del marc: Càtedra UdG–Dexcom / Projecte MANGLAI (Estudi preclínic) 

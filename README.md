@@ -8,7 +8,7 @@ README.md: aquest fitxer, amb la descripció del projecte i instruccions d’ús
 **->** code/: carpeta que conté els fitxers .m creats o modificats durant el projecte:
 _Aquest TFG s’ha desenvolupat a través de nombroses versions internes. En aquest repositori es publica únicament la versió final.
 El procés complet, les iteracions prèvies i l’evolució del protocol es troben detallats a la memòria del TFG._
-_Si considereu d’utilitat accedir a versions anteriors o a altres etapes del desenvolupament, no dubteu a contactar-me per correu electrònic:
+_Si considereu d’utilitat accedir a versions anteriors o a altres etapes del desenvolupament o resultats (com els AGP dels pacients control o pel protocol natiu del hospital), no dubteu a contactar-me per correu electrònic:
 laiacasademontt@gmail.com_
 
 **-** main.m: codi principal d'execució de la simulació (on s'han implentat les modifiacions per simular la hiperglucèmia produïda pels glucocorticoides.
@@ -17,10 +17,13 @@ laiacasademontt@gmail.com_
 
 **-** init_mycontroller.m: configuració inicial del controlador amb les variables inicialitzades.
 
+**->** functions/: carpeta que conté els fitxers .m creats o modificats durant el projecte:
 **-** generate_glucose.m: funció per simular glucosa capil·lar a partir del CGM.
 
+**-** ask_manual_glucose.m: funció per introduïr glucosa capil·lar, realitza comparativa, si diferència amb el CGM >25% fa servir la introduïda, sinó la del CGM.
 
-**->** outputs/: resultats rellevants generats per la simulació.
+
+**->** results/protocolfinal: resultats rellevants generats per la simulació.
 exemple_resultats.mat: dades de sortida simulades.
 
 **->** docs/: documents de suport.
